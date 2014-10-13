@@ -21,7 +21,8 @@ module ZipkinTracer extend self
 
   class RackHandler
     B3_REQUIRED_HEADERS = %w[HTTP_X_B3_TRACEID HTTP_X_B3_PARENTSPANID HTTP_X_B3_SPANID HTTP_X_B3_SAMPLED]
-    B3_HEADERS = B3_REQUIRED_HEADERS + %w[HTTP_X_B3_FLAGS]
+    B3_FLAGS_HEADER = "HTTP_X_B3_FLAGS"
+    B3_HEADERS = B3_REQUIRED_HEADERS + [B3_FLAGS_HEADER]
 
     def initialize(app, config=nil)
       @app = app
@@ -84,7 +85,7 @@ module ZipkinTracer extend self
                            env.values_at(*B3_HEADERS)
                          else
                            new_id = Trace.generate_id
-                           [new_id, nil, new_id, ("true" if Trace.should_sample?), default_flags]
+                           [new_id, nil, new_id, ("true" if Trace.should_sample?), env[B3_FLAGS_HEADER]]
                          end
       trace_parameters[3] = (trace_parameters[3] == "true")
       trace_parameters[4] = (trace_parameters[4] || default_flags).to_i
